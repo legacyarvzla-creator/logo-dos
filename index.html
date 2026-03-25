@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Legacy AR VZLA - Experiencia Vertical</title>
+    <title>Legacy AR VZLA - Experiencia Vertical Masiva</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
@@ -35,7 +35,7 @@
     <div id="ui-overlay">
         <h2 style="margin-bottom: 10px;">LEGACY AR VZLA</h2>
         <button id="startButton">ACTIVAR CÁMARA</button>
-        <p class="instrucciones">Toca el botón y apunta a tu franela para ver la magia en vertical.</p>
+        <p class="instrucciones">Toca el botón y apunta a tu franela para ver la magia masiva.</p>
     </div>
 
     <a-scene 
@@ -52,7 +52,7 @@
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
         <a-entity mindar-image-target="targetIndex: 0" id="target">
-            <a-video src="#miVideo" width="1" height="1.7" position="0 0.35 0" rotation="0 0 0"></a-video>
+            <a-video src="#miVideo" width="3" height="5.1" position="0 1.0 0" rotation="0 0 0"></a-video>
         </a-entity>
     </a-scene>
 
