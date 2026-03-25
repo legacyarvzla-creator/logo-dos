@@ -5,70 +5,74 @@
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background-color: black; }
-        #ui { 
-            position: absolute; z-index: 9999; bottom: 30px; left: 50%; 
-            transform: translateX(-50%); width: 100%; text-align: center;
+        body { margin: 0; overflow: hidden; }
+        /* UI Inicial para activar el audio/video en móviles */
+        #ui-overlay {
+            position: absolute; z-index: 9999; 
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.7);
         }
-        button { 
+        #startButton { 
             padding: 20px 40px; border-radius: 50px; border: none; 
             background: #e91e63; color: white; font-size: 18px; 
-            font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            font-weight: bold; cursor: pointer;
         }
-        /* Esto asegura que el video oculto no interfiera pero esté listo */
-        #miVideo { position: absolute; width: 1px; height: 1px; opacity: 0; }
     </style>
 </head>
 <body>
-    <div id="ui">
-        <button id="playButton">VER VIDEO EN PANTALLA COMPLETA</button>
+    <div id="ui-overlay">
+        <button id="startButton">EMPEZAR EXPERIENCIA</button>
     </div>
 
-    <video id="miVideo" src="./video.mp4" preload="auto" crossorigin="anonymous" webkit-playsinline playsinline></video>
-
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <a-scene 
+        mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; filterMinCF:0.0001; filterBeta:0.001;" 
+        color-space="sRGB" 
+        renderer="colorManagement: true, physicallyCorrectLights" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false">
         
+        <a-assets>
+            <video id="miVideo" src="./video.mp4" preload="auto" loop="true" crossorigin="anonymous" webkit-playsinline playsinline></video>
+        </a-assets>
+
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <a-entity mindar-image-target="targetIndex: 0">
-            <a-video src="#miVideo" width="0.6" height="1" position="0 0 0" opacity="1"></a-video>
+        <a-entity mindar-image-target="targetIndex: 0" id="target">
+            <a-video src="#miVideo" width="1" height="1" position="0 0 0" rotation="0 0 0"></a-video>
         </a-entity>
     </a-scene>
 
     <script>
-        const btn = document.querySelector("#playButton");
+        const ui = document.querySelector("#ui-overlay");
+        const startButton = document.querySelector("#startButton");
         const video = document.querySelector("#miVideo");
+        const sceneEl = document.querySelector('a-scene');
 
-        btn.addEventListener('click', function() {
-            // Quitamos el botón
-            document.querySelector("#ui").style.display = "none";
+        startButton.addEventListener('click', () => {
+            ui.style.display = "none";
             
-            // Iniciamos reproducción
-            video.play();
-
-            // TRUCO FINAL PARA PANTALLA COMPLETA
-            // Si es iPhone (Safari) usamos webkitEnterFullscreen
-            if (video.webkitEnterFullscreen) {
-                video.webkitEnterFullscreen();
-            } 
-            // Si es Android usamos el estándar
-            else if (video.requestFullscreen) {
-                video.requestFullscreen();
-            } else if (video.webkitRequestFullscreen) {
-                video.webkitRequestFullscreen();
-            }
+            // 1. Iniciamos el motor de AR
+            sceneEl.systems['mindar-image-system'].start(); 
+            
+            // 2. Pre-reproducimos el video (en silencio si es necesario) 
+            // para que esté listo cuando aparezca la imagen
+            video.play().then(() => {
+                video.pause(); // Lo pausamos hasta que detecte la imagen
+            });
         });
 
-        // Detectar cuando el video termina o el usuario cierra la pantalla completa
-        const cerrarVideo = () => {
-            video.pause();
-            // Opcional: recargar la página para volver a escanear
-            // window.location.reload(); 
-        };
+        // Eventos de detección (Estilo Artivive)
+        const targetEntity = document.querySelector('#target');
+        
+        targetEntity.addEventListener("targetFound", event => {
+            console.log("Imagen detectada");
+            video.play();
+        });
 
-        video.addEventListener('webkitendfullscreen', cerrarVideo);
-        video.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement) cerrarVideo();
+        targetEntity.addEventListener("targetLost", event => {
+            console.log("Imagen perdida");
+            video.pause();
         });
     </script>
 </body>
